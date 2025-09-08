@@ -1,0 +1,5 @@
+*.d
+*.o
+*.img
+kernel
+uefi_fat_mnt
