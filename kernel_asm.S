@@ -4,7 +4,7 @@
  */
 
 .global default_trap, timer_apic
-.extern handle_exception
+.extern handle_exception, apic_timer
 .code64
 
 /*
@@ -50,6 +50,7 @@ timer_apic:
 	cli
 	SAVE_REGS
 	/* TODO: Do something here */
+	call apic_timer
 	RESTORE_REGS
 	sti
 	iretq

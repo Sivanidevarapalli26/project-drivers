@@ -18,6 +18,9 @@
 #define PMLE4_PAGES (PDP_PAGES  + 512 -1)/ 512
 
 void init_idt();
+void x86_fillgate(int num, void *fun, int ist);
+void timer_apic();
+
 /* Multiboot2 header */
 struct multiboot_info {
 	uint32_t total_size;
@@ -114,12 +117,22 @@ void setup_pagetable(void *free_mem_base) {
 
 }
 
+void setup_apic_timer() {
+	x86_lapic_enable();
+
+	x86_fillgate(33,timer_apic, 0);
+	printf("Timer idt mapped");
+	//set_divide_configuration_register, initial_count_register, periodic mode
+}
+
 void kernel_start(struct multiboot_info *info, void *free_mem_base)
 {
 	fb_init(find_fb(info), 800, 600);
 	setup_pagetable(free_mem_base);
 	init_idt();
-	*((char *)0xFFFFFFFFFFFFFFFFULL) = 0 ;
+	// *((char *)0xFFFFFFFFFFFFFFFFULL) = 0 ;
+	setup_apic_timer();
+
 
 	while (1) {} /* Never return! */
 }

@@ -134,3 +134,9 @@ x86_lapic_enable(void)
 	/* Reset the task priority register */
 	x86_lapic_write(X86_LAPIC_TPR, 0x00U);
 }
+
+
+void apic_timer() {
+	printf("Timer!");
+	//acknowledge interrupt by writing to EOI register
+}
