@@ -4,6 +4,7 @@
  */
 
 .global default_trap, timer_apic
+.extern handle_exception
 .code64
 
 /*
@@ -39,6 +40,7 @@ default_trap:
 	cli
 	SAVE_REGS
 	/* TODO: Do something here */
+	call handle_exception
 	RESTORE_REGS
 	hlt
 

@@ -17,11 +17,13 @@
 #define PDP_PAGES (PD_PAGES  + 512 -1)/ 512
 #define PMLE4_PAGES (PDP_PAGES  + 512 -1)/ 512
 
+void init_idt();
 /* Multiboot2 header */
 struct multiboot_info {
 	uint32_t total_size;
 	uint32_t pad;
 };
+
 
 /* Locate the framebuffer address */
 void *find_fb(struct multiboot_info *info)
@@ -107,6 +109,7 @@ void setup_pagetable(void *free_mem_base) {
 	}
 
 	write_cr3((uint64_t)pmle4);
+	printf("Page table setup completed and is working properly if this message gets printed to fb\n");
 
 
 }
@@ -115,7 +118,8 @@ void kernel_start(struct multiboot_info *info, void *free_mem_base)
 {
 	fb_init(find_fb(info), 800, 600);
 	setup_pagetable(free_mem_base);
-	
+	init_idt();
+	*((char *)0xFFFFFFFFFFFFFFFFULL) = 0 ;
 
 	while (1) {} /* Never return! */
 }
