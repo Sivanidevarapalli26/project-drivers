@@ -20,3 +20,4 @@
 #define X86_LAPIC_TIMER_DIVIDE	0x3EU
 
 void x86_lapic_enable(void);
+void setup_apic_timer();

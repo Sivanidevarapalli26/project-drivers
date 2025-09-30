@@ -8,6 +8,9 @@
 #include <apic.h>
 #include <printf.h>
 
+void x86_fillgate(int num, void *fun, int ist);
+void timer_apic();
+
 static void *lapic_base = NULL;
 
 static inline void
@@ -137,6 +140,20 @@ x86_lapic_enable(void)
 
 
 void apic_timer() {
-	printf("Timer!");
-	//acknowledge interrupt by writing to EOI register
+	printf("Timer!\n");
+	x86_lapic_write(X86_LAPIC_EOI, 0);
+}
+
+
+void setup_apic_timer() {
+	x86_lapic_enable();
+
+	x86_fillgate(33,timer_apic, 0);
+	printf("Timer idt mapped\n");
+
+	x86_lapic_write(X86_LAPIC_TIMER, 33ULL | (0x1U<<17));
+	x86_lapic_write(X86_LAPIC_TIMER_DIVIDE, 0xA);
+	x86_lapic_write(X86_LAPIC_TIMER_INIT, 12582912);
+	
+
 }
