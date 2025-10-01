@@ -7,11 +7,45 @@
 #include <msr.h>
 #include <apic.h>
 #include <printf.h>
+#include <fb.h>
+
+#define PAGE_SIZE 4096
 
 void x86_fillgate(int num, void *fun, int ist);
 void timer_apic();
 
 static void *lapic_base = NULL;
+void task_init(void *tcb, void *entry, void * stack);
+void task_start(void *tcb);
+
+void* curr_task = NULL;
+
+static uint8_t *task1_tcb = NULL;
+static uint8_t *task2_tcb = NULL;
+static uint8_t *task1_stack = NULL;
+static uint8_t *task2_stack = NULL;
+
+
+void task1(void) {
+    size_t count = 0;
+    while (1) {
+        if (count++ % 500000000 == 0) {
+            fb_status_update(0);  
+		}
+    }
+}
+
+void task2(void) {
+    size_t count = 0;
+    while (1) {
+        if (count++ % 500000000 == 0) {
+            fb_status_update(1);   
+        }
+    }
+}
+
+
+
 
 static inline void
 cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
@@ -140,7 +174,17 @@ x86_lapic_enable(void)
 
 
 void apic_timer() {
-	printf("Timer!\n");
+	// printf("Timer!\n");
+	x86_lapic_write(X86_LAPIC_EOI, 0);
+}
+
+void timer_apic_handler(void) {
+	// printf("switching");
+	if(curr_task == (void *) task1_tcb) {
+		curr_task = (void *) task2_tcb;
+	} else {
+		curr_task = (void *) task1_tcb;
+	}
 	x86_lapic_write(X86_LAPIC_EOI, 0);
 }
 
@@ -149,11 +193,23 @@ void setup_apic_timer() {
 	x86_lapic_enable();
 
 	x86_fillgate(33,timer_apic, 0);
-	printf("Timer idt mapped\n");
+	// printf("Timer idt mapped\n");
 
 	x86_lapic_write(X86_LAPIC_TIMER, 33ULL | (0x1U<<17));
-	x86_lapic_write(X86_LAPIC_TIMER_DIVIDE, 0xA);
+	x86_lapic_write(X86_LAPIC_TIMER_DIVIDE, 0xB);
 	x86_lapic_write(X86_LAPIC_TIMER_INIT, 12582912);
 	
 
+}
+
+void setup_tasks(void * free_mem_base) {
+	task1_tcb = free_mem_base ;
+	task2_tcb = task1_tcb + PAGE_SIZE;
+	task1_stack = task2_tcb + PAGE_SIZE;
+	task2_stack = task1_stack + PAGE_SIZE;
+
+	task_init(task1_tcb, task1, task1_stack + PAGE_SIZE);
+	task_init(task2_tcb, task2, task2_stack + PAGE_SIZE);
+
+	task_start(task1_tcb);
 }

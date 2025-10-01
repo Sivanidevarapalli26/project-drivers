@@ -1,5 +1,5 @@
 .global default_trap, timer_apic, task_init, task_start
-.extern handle_exception
+.extern handle_exception, apic_timer
 .code64
 
 /*
@@ -145,7 +145,7 @@ timer_apic:
 	SAVE_REGS_NORAX
 
 	/* Call the C handler, EOI only, curr_task is still NULL. */
-    call timer_apic_handler
+    call apic_timer
 
 	RESTORE_REGS
 	sti

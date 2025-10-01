@@ -21,3 +21,4 @@
 
 void x86_lapic_enable(void);
 void setup_apic_timer();
+void setup_tasks(void *);

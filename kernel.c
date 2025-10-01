@@ -68,13 +68,13 @@ void write_cr3(uint64_t cr3_value) {
 					);
 }
 
-void setup_pagetable(void *free_mem_base) {
-	printf("Values of the memory initialization %d %d %d %d", PT_PAGES, PD_PAGES, PDP_PAGES, PMLE4_PAGES);
+void *setup_pagetable(void *free_mem_base) {
+	// printf("Values of the memory initialization %d %d %d %d", PT_PAGES, PD_PAGES, PDP_PAGES, PMLE4_PAGES);
 
-	printf("value of free base without alignment: %d\n", (uint64_t)free_mem_base);
+	// printf("value of free base without alignment: %d\n", (uint64_t)free_mem_base);
 	uint8_t* base = (uint8_t *) align_to_page(free_mem_base);
 
-	printf("value of base with alignment: %d\n", (uint64_t)base);
+	// printf("value of base with alignment: %d\n", (uint64_t)base);
 
 	uint64_t *p = (uint64_t*)base;
 
@@ -84,7 +84,7 @@ void setup_pagetable(void *free_mem_base) {
 	}
 
 	uint64_t *pd = (uint64_t*) (p + PT_PAGES * 512);
-	printf("starting address pd pages: %d\n", (uint64_t)pd);
+	// printf("starting address pd pages: %d\n", (uint64_t)pd);
 
 	for(uint64_t j = 0; j < PT_PAGES; j++) {
 		pd[j] = (uint64_t) (p + 512 * j);
@@ -92,7 +92,7 @@ void setup_pagetable(void *free_mem_base) {
 	}
 
 	uint64_t *pdp = (uint64_t *)(pd + PD_PAGES * 512);
-	printf("starting address pdp pages: %d\n", (uint64_t)pdp);
+	// printf("starting address pdp pages: %d\n", (uint64_t)pdp);
 
 	initialize_page_with_zeroes((uint8_t*)pdp);
 	for(size_t k = 0; k < PD_PAGES; k++) {
@@ -101,7 +101,7 @@ void setup_pagetable(void *free_mem_base) {
 	}
 
 	uint64_t* pmle4 = (uint64_t *)(pdp + PDP_PAGES * 512);
-	printf("starting address pmle4 pages: %d\n", (uint64_t)pmle4);
+	// printf("starting address pmle4 pages: %d\n", (uint64_t)pmle4);
 
 	initialize_page_with_zeroes((uint8_t*)pmle4);
 	for(size_t l = 0; l< PDP_PAGES; l++) {
@@ -112,6 +112,7 @@ void setup_pagetable(void *free_mem_base) {
 	write_cr3((uint64_t)pmle4);
 	printf("Page table setup completed and is working properly if this message gets printed to fb\n");
 
+	return pmle4 + 512; //address of new free memory base
 
 }
 
@@ -119,10 +120,11 @@ void setup_pagetable(void *free_mem_base) {
 void kernel_start(struct multiboot_info *info, void *free_mem_base)
 {
 	fb_init(find_fb(info), 800, 600);
-	setup_pagetable(free_mem_base);
+	free_mem_base = setup_pagetable(free_mem_base);
 	init_idt();
 	// *((char *)0xFFFFFFFFFFFFFFFFULL) = 0 ;
 	setup_apic_timer();
+	setup_tasks(free_mem_base);
 
 
 	while (1) {} /* Never return! */
