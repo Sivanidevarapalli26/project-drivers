@@ -29,10 +29,11 @@ header_end:
 
 _start:
 	cli                         /* disable interrupts */
-
-	movb $0xFF, %al             /* disable PIC */
+/*
+	movb $0xFF, %al            
 	outb %al, $0xA1
 	outb %al, $0x21
+*/
 
 	lgdt (gdt_ptr)
 	ljmp $0x08, $_start32		/* %cs = 0x08 */

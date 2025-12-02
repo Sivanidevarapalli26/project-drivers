@@ -170,6 +170,8 @@ x86_lapic_enable(void)
 
 	/* Reset the task priority register */
 	x86_lapic_write(X86_LAPIC_TPR, 0x00U);
+
+	x86_lapic_write(0x350, 0x700);
 }
 
 
@@ -192,10 +194,10 @@ void timer_apic_handler(void) {
 void setup_apic_timer() {
 	x86_lapic_enable();
 
-	x86_fillgate(33,timer_apic, 0);
-	// printf("Timer idt mapped\n");
+	x86_fillgate(50, timer_apic, 0);
+	printf("Timer idt mapped\n");
 
-	x86_lapic_write(X86_LAPIC_TIMER, 33ULL | (0x1U<<17));
+	x86_lapic_write(X86_LAPIC_TIMER, 50ULL | (0x1U<<17));
 	x86_lapic_write(X86_LAPIC_TIMER_DIVIDE, 0xB);
 	x86_lapic_write(X86_LAPIC_TIMER_INIT, 12582912);
 	
