@@ -1,5 +1,5 @@
-.global default_trap, timer_apic, task_init, task_start
-.extern handle_exception, apic_timer
+.global default_trap, timer_apic, task_init, task_start, keyboard_isr
+.extern handle_exception, apic_timer, keyboard_handler_func
 .code64
 
 /*
@@ -41,6 +41,16 @@ default_trap:
 	call handle_exception
 	RESTORE_REGS
 1:	jmp 1b
+
+.align 64
+.type keyboard_isr,%function
+keyboard_isr:
+    cli
+    SAVE_REGS
+    call keyboard_handler_func
+    RESTORE_REGS
+    sti
+    iretq
 
 /* void task_init(void *tcb, void *entry, void *stack) */
 .align 64

@@ -1,6 +1,6 @@
 # CC and LD variables (change for newer Macs)
-CC=gcc
-LD=ld
+CC=x86_64-linux-gnu-gcc
+LD=x86_64-linux-gnu-ld
 
 OVMF=/usr/share/ovmf/OVMF.fd
 
@@ -30,13 +30,14 @@ $(BOOT): $(KERNEL)
 
 # Kernel and user program compilation
 CFLAGS += -mcmodel=small -Wall -Wno-builtin-declaration-mismatch -O2 -fno-pie -mno-red-zone -nostdinc -fno-stack-protector -fno-zero-initialized-in-bss -fno-builtin -c
-LDFLAGS = -nostdlib -melf_x86_64
+LDFLAGS = -nostdlib -m elf_x86_64 -T ./kernel.lds
 
 KERNEL_OBJS = kernel_entry.o # Do not reorder
 KERNEL_OBJS += kernel.o idt.o kernel_asm.o apic.o ascii_font.o fb.o printf.o pic.o
+KERNEL_OBJS += keyboard.o
 
 $(KERNEL): $(KERNEL_OBJS)
-	$(LD) $(LDFLAGS) -T ./kernel.lds $^ -o $@
+	$(LD) $(LDFLAGS) $^ -o $@
 
 %.o: %.c
 	$(CC) $(CFLAGS) -I ./include -c -o $@ $<

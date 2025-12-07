@@ -22,8 +22,11 @@ void pic_init(void) {
 
     outb(PIC1_DATA, 0xFF);
     outb(PIC2_DATA, 0xFF);
-
     printf("PIC Remapped and Initialized.\n");
+
+    pic_unmask_irq(1);
+    uint8_t mask = inb(0x21);
+    printf("PIC master mask = %x\n", mask);
 
 }
 
