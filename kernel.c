@@ -130,7 +130,7 @@ void kernel_start(struct multiboot_info *info, void *free_mem_base)
     keyboard_init();
 	mouse_init();
 	setup_apic_timer();
-	setup_tasks(free_mem_base);
+	// setup_tasks(free_mem_base);
 
 
 	while (1) {} /* Never return! */
