@@ -25,18 +25,18 @@ static const char scancode_set1[128] = {
 void keyboard_handler_func()
 {
     uint8_t sc = inb(0x60);
-    printf("[KBD IRQ] scancode=%x\n", sc);
+    // printf("[KBD IRQ] scancode=%x\n", sc);
     if (sc & 0x80) {
         goto eoi;
     }
     if (sc < sizeof(scancode_set1)) {
         char ch = scancode_set1[sc];
         if (ch == '\n') {
-            fb_output('\n');
+            fb_output_at_cursor('\n');
         } else if (ch == '\b') {
-            fb_output('^');
+            fb_output_at_cursor('^');
         } else if (ch != 0) {
-            fb_output(ch);
+            fb_output_at_cursor(ch);
         } else {
         }
     }

@@ -34,7 +34,7 @@ LDFLAGS = -nostdlib -m elf_x86_64 -T ./kernel.lds
 
 KERNEL_OBJS = kernel_entry.o # Do not reorder
 KERNEL_OBJS += kernel.o idt.o kernel_asm.o apic.o ascii_font.o fb.o printf.o pic.o
-KERNEL_OBJS += keyboard.o
+KERNEL_OBJS += keyboard.o mouse.o
 
 $(KERNEL): $(KERNEL_OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@

@@ -1,5 +1,5 @@
-.global default_trap, timer_apic, task_init, task_start, keyboard_isr
-.extern handle_exception, apic_timer, keyboard_handler_func
+.global default_trap, timer_apic, task_init, task_start, keyboard_isr, mouse_isr
+.extern handle_exception, apic_timer, keyboard_handler_func, mouse_handler_func
 .code64
 
 /*
@@ -48,6 +48,16 @@ keyboard_isr:
     cli
     SAVE_REGS
     call keyboard_handler_func
+    RESTORE_REGS
+    sti
+    iretq
+
+.align 64
+.type mouse_isr,%function
+mouse_isr:
+    cli
+    SAVE_REGS
+    call mouse_handler_func
     RESTORE_REGS
     sti
     iretq

@@ -10,6 +10,7 @@
 #include <printf.h>
 #include <pic.h>
 #include <keyboard.h>
+#include <mouse.h>
 
 #define PAGE_SIZE 4096
 #define TOTAL_MEMORY 4294967296
@@ -127,6 +128,7 @@ void kernel_start(struct multiboot_info *info, void *free_mem_base)
 	// *((char *)0xFFFFFFFFFFFFFFFFULL) = 0 ;
 	pic_init();
     keyboard_init();
+	mouse_init();
 	setup_apic_timer();
 	setup_tasks(free_mem_base);
 

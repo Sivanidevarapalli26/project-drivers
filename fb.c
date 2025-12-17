@@ -17,12 +17,16 @@ extern unsigned char __ascii_font[2048]; /* ascii_font.c */
 #define FB_STATUS_HEIGHT	36
 
 static unsigned int *Fb;
-static unsigned int Width, PosX, PosY, MaxX, MaxY;
+static unsigned int Width, Height, PosX, PosY, MaxX, MaxY;
 
 static unsigned int StatusCurr[2];
 static unsigned int StatusStart[2];
 static unsigned int StatusEnd[2];
 static unsigned int StatusY;
+
+static unsigned int SavedPixels[FONT_WIDTH * FONT_HEIGHT];
+static unsigned int CursorX = 0, CursorY = 0;
+static int CursorVisible = 0;
 
 #define HELLO_STATEMENT \
 	"Framebuffer Console (CSE 597)\nCopyright (C) 2024 Ruslan Nikolaev\n\n"
@@ -65,6 +69,122 @@ void fb_init(unsigned int *fb, unsigned int width, unsigned int height)
 	StatusStart[1] = StatusCurr[1] = FB_STATUS_MARGIN + (width / 2);
 	StatusEnd[0] = width / 2 - FB_STATUS_MARGIN;
 	StatusEnd[1] = width - FB_STATUS_MARGIN;
+}
+
+static void fb_save_background(int x, int y)
+{
+    /* Save the pixels under the cursor */
+    size_t cur = (size_t)x + (size_t)y * Width;
+    for (size_t j = 0; j < FONT_HEIGHT; j++) {
+        for (size_t i = 0; i < FONT_WIDTH; i++) {
+            SavedPixels[j * FONT_WIDTH + i] = Fb[cur + i];
+        }
+        cur += Width;
+    }
+}
+
+
+static void fb_restore_background(int x, int y)
+{
+    /* Restore the saved pixels */
+    size_t cur = (size_t)x + (size_t)y * Width;
+    for (size_t j = 0; j < FONT_HEIGHT; j++) {
+        for (size_t i = 0; i < FONT_WIDTH; i++) {
+            Fb[cur + i] = SavedPixels[j * FONT_WIDTH + i];
+        }
+        cur += Width;
+    }
+}
+
+void fb_draw_cursor(int x, int y)
+{
+
+    unsigned int char_x = x / FONT_WIDTH;
+    unsigned int char_y = y / FONT_HEIGHT;
+    
+  
+    if (char_x >= MaxX) char_x = MaxX - 1;
+    if (char_y >= MaxY) char_y = MaxY - 1;
+    
+  
+    if (CursorVisible && (char_x != CursorX || char_y != CursorY)) {
+  
+        fb_restore_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+    }
+    
+    CursorX = char_x;
+    CursorY = char_y;
+    
+ 
+    fb_save_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+    
+  
+    size_t cur = (size_t)(CursorX * FONT_WIDTH) + (CursorY * FONT_HEIGHT) * Width;
+    for (size_t j = 0; j < FONT_HEIGHT; j++) {
+       
+        Fb[cur] = 0xFFFFFFFFU;
+        Fb[cur + 1] = 0xFFFFFFFFU; 
+        cur += Width;
+    }
+    
+    CursorVisible = 1;
+}
+
+void fb_set_cursor_position(int x, int y)
+{
+    
+    if (CursorVisible) {
+        fb_restore_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+    }
+    
+    CursorX = x;
+    CursorY = y;
+    
+    
+    if (CursorX >= MaxX) CursorX = MaxX - 1;
+    if (CursorY >= MaxY) CursorY = MaxY - 1;
+    
+    
+    fb_save_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+    
+    size_t cur = (size_t)(CursorX * FONT_WIDTH) + (CursorY * FONT_HEIGHT) * Width;
+    for (size_t j = 0; j < FONT_HEIGHT; j++) {
+        Fb[cur] = 0xFFFFFFFFU;
+        Fb[cur + 1] = 0xFFFFFFFFU;
+        cur += Width;
+    }
+    
+    CursorVisible = 1;
+}
+
+void fb_output_at_cursor(char ch)
+{
+   
+    if (CursorVisible) {
+        fb_restore_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+        CursorVisible = 0;
+    }
+    
+    
+    PosX = CursorX;
+    PosY = CursorY;
+    
+    
+    fb_output(ch);
+    
+    
+    CursorX = PosX;
+    CursorY = PosY;
+    
+  
+    fb_save_background(CursorX * FONT_WIDTH, CursorY * FONT_HEIGHT);
+    size_t cur = (size_t)(CursorX * FONT_WIDTH) + (CursorY * FONT_HEIGHT) * Width;
+    for (size_t j = 0; j < FONT_HEIGHT; j++) {
+        Fb[cur] = 0xFFFFFFFFU;
+        Fb[cur + 1] = 0xFFFFFFFFU;
+        cur += Width;
+    }
+    CursorVisible = 1;
 }
 
 void fb_status_update(unsigned int task_id)
